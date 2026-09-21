@@ -1,6 +1,6 @@
-[APLIKASI_GAME_KAMERA_BENAR-SALAH.html](https://github.com/user-attachments/files/32448549/APLIKASI_GAME_KAMERA_BENAR-SALAH.2.html)
+[Uploading APLIKASI_GAME_KAMERA_BENAR-SALAH.html…]()
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="mx-locked">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -320,10 +320,204 @@
     .mx-ed-actions{margin-left:0;}
   }
 </style>
+<style id="mx-gate-style">
+  /* ===== TAMBAHAN: gerbang password & status kamera ===== */
+  html.mx-locked #stage{visibility:hidden;}
+  #mxGate{
+    position:fixed; inset:0; z-index:2147483647;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+    background:var(--bg); color:var(--text);
+    font-family:'Inter',system-ui,sans-serif; overflow:auto;
+  }
+  .mxg-wash{position:absolute; top:0; bottom:0; width:50%; pointer-events:none;}
+  .mxg-wash.a{left:0; background:linear-gradient(90deg, rgba(59,130,246,.24), rgba(59,130,246,0) 90%);}
+  .mxg-wash.b{right:0; background:linear-gradient(270deg, rgba(245,158,11,.22), rgba(245,158,11,0) 90%);}
+  .mxg-mid{position:absolute; top:0; bottom:0; left:50%; width:2px; transform:translateX(-1px); pointer-events:none;
+    background:linear-gradient(to bottom, transparent 0%, rgba(255,255,255,.55) 12%, rgba(255,255,255,.55) 88%, transparent 100%);}
+  .mxg-card{
+    position:relative; z-index:1; width:100%; max-width:440px; margin:auto;
+    padding:36px 34px 28px; border-radius:24px; text-align:center;
+    background:var(--panel); border:1px solid rgba(255,255,255,.1); backdrop-filter:blur(8px);
+  }
+  .mxg-card h1{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:clamp(1.8rem,5vw,2.4rem); line-height:1.1; letter-spacing:-.4px;}
+  .mxg-sub{color:var(--muted); font-size:1.02rem; margin:10px 0 24px;}
+  .mxg-field{display:flex; gap:8px; align-items:stretch;}
+  #mxGatePw{
+    flex:1; min-width:0; font:600 1.15rem 'Space Grotesk',sans-serif; letter-spacing:.06em;
+    color:var(--text); background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18);
+    border-radius:12px; padding:14px 16px;
+  }
+  #mxGatePw::placeholder{color:var(--muted); letter-spacing:0; font-weight:500;}
+  #mxGatePw:focus-visible,#mxGateEye:focus-visible,#mxGateGo:focus-visible{outline:2px solid #fff; outline-offset:2px;}
+  #mxGateEye{
+    font:600 .9rem 'Space Grotesk',sans-serif; color:var(--text); cursor:pointer;
+    background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.14); border-radius:12px; padding:0 16px;
+  }
+  #mxGateEye:hover{background:rgba(255,255,255,.18);}
+  #mxGateErr{min-height:1.5em; margin:12px 0 4px; color:#FCA5A5; font-size:.95rem; font-weight:500;}
+  #mxGateGo{
+    width:100%; margin-top:6px; font:600 1.1rem 'Space Grotesk',sans-serif; color:#fff; cursor:pointer;
+    background:var(--a); border:none; border-radius:999px; padding:15px 24px;
+  }
+  #mxGateGo:hover{filter:brightness(1.08);}
+  #mxGateGo:disabled{opacity:.55; cursor:default; filter:none;}
+  .mxg-note{color:var(--muted); font-size:.88rem; margin-top:18px;}
+  .mxg-card.shake{animation:mxgShake .38s;}
+  @keyframes mxgShake{0%,100%{transform:translateX(0);}20%{transform:translateX(-9px);}40%{transform:translateX(8px);}60%{transform:translateX(-6px);}80%{transform:translateX(4px);}}
+  @media (prefers-reduced-motion:reduce){.mxg-card.shake{animation:none;}}
+
+  #mxCamStatus{margin:12px auto 0; max-width:560px; font-size:.95rem; line-height:1.45; color:var(--muted);}
+  #mxCamStatus:empty{display:none;}
+  #mxCamStatus.err{color:#FCA5A5;}
+</style>
 </head>
 <body>
 
-<div id="stage">
+<!-- ===== TAMBAHAN: gerbang password. Aplikasi (#stage) tetap terkunci sampai password benar. ===== -->
+<div id="mxGate" role="dialog" aria-modal="true" aria-labelledby="mxGateTitle">
+  <div class="mxg-wash a"></div>
+  <div class="mxg-wash b"></div>
+  <div class="mxg-mid"></div>
+  <form id="mxGateForm" class="mxg-card" autocomplete="off" novalidate>
+    <h1 id="mxGateTitle">Kuis Interaktif</h1>
+    <p class="mxg-sub">Masukkan password untuk membuka aplikasi.</p>
+    <div class="mxg-field">
+      <input id="mxGatePw" type="password" placeholder="Password" aria-label="Password"
+             autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <button type="button" id="mxGateEye" aria-pressed="false">Lihat</button>
+    </div>
+    <p id="mxGateErr" role="alert" aria-live="assertive"></p>
+    <button type="submit" id="mxGateGo">Masuk</button>
+    <p class="mxg-note">Setelah masuk, browser akan meminta izin kamera. Pilih Izinkan.</p>
+  </form>
+</div>
+
+<script id="mx-gate-script">
+(function(){
+  'use strict';
+
+  /* Password tidak disimpan sebagai teks biasa, hanya sidik jarinya (SHA-256 + garam). */
+  var SALT = 'mx.kuis.v1|';
+  var HASH = 'e48c470f53d5ee0fb6fa634a721407e0df1ececd1eaeb2297cc2ef16d4704fed';
+  var MAX_TRIES = 5, LOCK_SECONDS = 30;
+
+  /* SHA-256 murni JavaScript: tetap jalan di browser IFP lama dan di alamat http. */
+  function sha256(str){
+    var mp = Math.pow, mw = mp(2, 32), i, j, out = '';
+    var words = [], hash = [], k = [], composite = {};
+    var bits = str.length * 8;
+    str = unescape(encodeURIComponent(str)); bits = str.length * 8;
+    for(var cand = 2, n = 0; n < 64; cand++){
+      if(!composite[cand]){
+        for(i = 0; i < 313; i += cand) composite[i] = cand;
+        hash[n] = (mp(cand, .5) * mw) | 0;
+        k[n++] = (mp(cand, 1 / 3) * mw) | 0;
+      }
+    }
+    str += '\x80';
+    while(str.length % 64 - 56) str += '\x00';
+    for(i = 0; i < str.length; i++){
+      j = str.charCodeAt(i);
+      words[i >> 2] |= j << ((3 - i) % 4) * 8;
+    }
+    words[words.length] = ((bits / mw) | 0);
+    words[words.length] = (bits);
+    for(j = 0; j < words.length;){
+      var w = words.slice(j, j += 16), old = hash;
+      hash = hash.slice(0, 8);
+      for(i = 0; i < 64; i++){
+        var w15 = w[i - 15], w2 = w[i - 2];
+        var a = hash[0], e = hash[4];
+        var t1 = hash[7] + (((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7)))
+               + ((e & hash[5]) ^ (~e & hash[6])) + k[i]
+               + (w[i] = (i < 16) ? w[i] : (
+                   w[i - 16]
+                   + (((w15 >>> 7) | (w15 << 25)) ^ ((w15 >>> 18) | (w15 << 14)) ^ (w15 >>> 3))
+                   + w[i - 7]
+                   + (((w2 >>> 17) | (w2 << 15)) ^ ((w2 >>> 19) | (w2 << 13)) ^ (w2 >>> 10))
+                 ) | 0);
+        var t2 = (((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10)))
+               + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+        hash = [(t1 + t2) | 0].concat(hash);
+        hash[4] = (hash[4] + t1) | 0;
+      }
+      for(i = 0; i < 8; i++) hash[i] = (hash[i] + old[i]) | 0;
+    }
+    for(i = 0; i < 8; i++){
+      for(j = 3; j + 1; j--){
+        var b = (hash[i] >> (j * 8)) & 255;
+        out += ((b < 16) ? 0 : '') + b.toString(16);
+      }
+    }
+    return out;
+  }
+
+  var root = document.documentElement;
+  var gate = document.getElementById('mxGate');
+  var form = document.getElementById('mxGateForm');
+  var pw = document.getElementById('mxGatePw');
+  var eye = document.getElementById('mxGateEye');
+  var err = document.getElementById('mxGateErr');
+  var go = document.getElementById('mxGateGo');
+  var fails = 0, lockTimer = null;
+
+  eye.addEventListener('click', function(){
+    var show = pw.type === 'password';
+    pw.type = show ? 'text' : 'password';
+    eye.textContent = show ? 'Sembunyikan' : 'Lihat';
+    eye.setAttribute('aria-pressed', show ? 'true' : 'false');
+    pw.focus();
+  });
+
+  function startLock(){
+    var left = LOCK_SECONDS;
+    go.disabled = true; pw.disabled = true;
+    err.textContent = 'Terlalu banyak percobaan. Coba lagi dalam ' + left + ' detik.';
+    lockTimer = setInterval(function(){
+      left--;
+      if(left <= 0){
+        clearInterval(lockTimer); lockTimer = null;
+        fails = 0; go.disabled = false; pw.disabled = false;
+        err.textContent = ''; pw.focus();
+      } else {
+        err.textContent = 'Terlalu banyak percobaan. Coba lagi dalam ' + left + ' detik.';
+      }
+    }, 1000);
+  }
+
+  function unlock(){
+    root.classList.remove('mx-locked');
+    var stage = document.getElementById('stage');   // dicari saat dibuka: elemen ini baru ada setelah skrip ini dibaca
+    if(stage) stage.removeAttribute('inert');
+    if(gate && gate.parentNode) gate.parentNode.removeChild(gate);
+    // Diminta langsung setelah tombol Masuk ditekan, supaya browser/IFP menampilkan kotak izin kamera.
+    if(typeof window.mxStartCamera === 'function') window.mxStartCamera();
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    if(lockTimer) return;
+    var attempt = pw.value.trim();
+    if(sha256(SALT + attempt) === HASH){
+      unlock();
+      return;
+    }
+    fails++;
+    pw.value = '';
+    if(fails >= MAX_TRIES){ startLock(); return; }
+    err.textContent = 'Password salah. Periksa huruf besar/kecil lalu coba lagi.';
+    form.classList.remove('shake'); void form.offsetWidth; form.classList.add('shake');
+    pw.focus();
+  });
+
+  // Jangan biarkan tombol pintasan game menangkap ketikan password
+  gate.addEventListener('keydown', function(e){ e.stopPropagation(); });
+
+  try{ pw.focus(); }catch(_){}
+})();
+</script>
+
+<div id="stage" inert>
   <div id="cam-wrap">
     <video id="video" autoplay muted playsinline></video>
     <div id="cam-placeholder">
@@ -513,22 +707,106 @@ document.getElementById('panelToggle').addEventListener('click', () => {
 // Camera
 const video = document.getElementById('video');
 const camPlaceholder = document.getElementById('cam-placeholder');
-document.getElementById('startCamBtn').addEventListener('click', async () => {
+const camMsg = camPlaceholder.querySelector('p');
+const CAM_IDLE_MSG = camMsg.textContent;
+let camStream = null;
+let camBusy = false;
+
+// Tampilkan pesan di layar kamera dan di halaman awal (kolom status di bawah tombol kamera)
+function camNotify(text, isError){
+  camMsg.textContent = text || CAM_IDLE_MSG;
+  const el = document.getElementById('mxCamStatus');
+  if(el){ el.textContent = text || ''; el.classList.toggle('err', !!isError); }
+}
+// Memberi tahu tombol "Aktifkan kamera" di halaman awal agar memperbarui tampilannya
+function camChanged(){ video.dispatchEvent(new Event('camchange')); }
+function camActive(){
+  return !!(camStream && camStream.getTracks().some(t => t.readyState === 'live'));
+}
+
+function camErrorText(err){
+  const n = err && err.name;
+  if(n === 'NotAllowedError' || n === 'PermissionDeniedError' || n === 'SecurityError'){
+    return 'Izin kamera belum diberikan. Ketuk ikon gembok atau kamera di dekat alamat web, ' +
+           'ubah Kamera menjadi Izinkan, lalu tekan Aktifkan kamera lagi. ' +
+           'Jika aplikasi ini ditanam di halaman lain, halaman itu harus mengizinkan kamera (allow="camera").';
+  }
+  if(n === 'NotFoundError' || n === 'DevicesNotFoundError' || n === 'OverconstrainedError'){
+    return 'Kamera tidak ditemukan. Pastikan kamera terpasang dan tidak dinonaktifkan, lalu tekan Aktifkan kamera lagi.';
+  }
+  if(n === 'NotReadableError' || n === 'TrackStartError' || n === 'AbortError'){
+    return 'Kamera sedang dipakai aplikasi lain. Tutup aplikasi atau tab yang memakai kamera, lalu tekan Aktifkan kamera lagi.';
+  }
+  return 'Kamera tidak dapat dibuka (' + (n || 'kesalahan tidak dikenal') + '). Tekan Aktifkan kamera untuk mencoba lagi.';
+}
+
+function onCamEnded(){
+  camStream = null;
+  video.srcObject = null;
+  camPlaceholder.style.display = '';
+  camNotify('Kamera terputus. Tekan Aktifkan kamera untuk menyambungkan lagi.', true);
+  camChanged();
+}
+
+async function startCamera(){
+  if(camBusy || camActive()) return;
+
+  // Tanpa HTTPS browser tidak menyediakan kamera dan tidak akan menampilkan kotak izin
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    camPlaceholder.style.display = '';
+    camNotify(
+      window.isSecureContext === false
+        ? 'Kamera hanya bisa dipakai lewat alamat aman. Buka aplikasi memakai link yang diawali https://'
+        : 'Browser ini belum mendukung kamera. Gunakan Chrome, Edge, atau Safari versi terbaru.',
+      true
+    );
+    camChanged();
+    return;
+  }
+
+  camBusy = true;
+  camNotify('Meminta izin kamera. Pilih Izinkan pada kotak yang muncul.', false);
   try{
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video:{
-        facingMode:'user',
-        width:{ideal:1280},
-        height:{ideal:720}
-      },
-      audio:false
-    });
+    let stream;
+    try{
+      stream = await navigator.mediaDevices.getUserMedia({
+        video:{ facingMode:'user', width:{ideal:1280}, height:{ideal:720} },
+        audio:false
+      });
+    }catch(first){
+      const n = first && first.name;
+      // Izin ditolak atau kamera dipakai: tidak perlu dicoba ulang. Selain itu, coba pengaturan paling sederhana.
+      if(n === 'NotAllowedError' || n === 'PermissionDeniedError' || n === 'SecurityError' || n === 'NotReadableError') throw first;
+      stream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false });
+    }
+    camStream = stream;
+    stream.getVideoTracks().forEach(t => t.addEventListener('ended', onCamEnded));
     video.srcObject = stream;
     camPlaceholder.style.display = 'none';
+    camNotify('', false);
+    try{ await video.play(); }catch(_){ /* autoplay sudah diatur lewat atribut video */ }
   }catch(err){
-    camPlaceholder.querySelector('p').textContent = 'Kamera tidak dapat diakses. Periksa izin kamera pada perangkat/browser lalu coba lagi.';
+    camPlaceholder.style.display = '';
+    camNotify(camErrorText(err), true);
+  }finally{
+    camBusy = false;
+    camChanged();
   }
-});
+}
+
+document.getElementById('startCamBtn').addEventListener('click', startCamera);
+window.mxStartCamera = startCamera;
+
+// Jika izin kamera diubah menjadi "Izinkan" lewat pengaturan browser, kamera langsung menyala
+try{
+  if(navigator.permissions && navigator.permissions.query){
+    navigator.permissions.query({ name:'camera' }).then(p => {
+      p.onchange = () => {
+        if(p.state === 'granted' && !document.documentElement.classList.contains('mx-locked')) startCamera();
+      };
+    }).catch(() => {});
+  }
+}catch(_){}
 
 loadQuestion();
 </script>
@@ -595,6 +873,7 @@ loadQuestion();
           <button type="button" class="mx-btn" id="mxEditBtn">Edit soal</button>
           <button type="button" class="mx-btn" id="mxCamBtn">Aktifkan kamera</button>
         </div>
+        <p id="mxCamStatus" role="status" aria-live="polite"></p>
         <div class="mx-links">
           <button type="button" class="mx-link" id="mxImportS">Impor soal (.json)</button>
           <button type="button" class="mx-link" id="mxExportS">Ekspor soal (.json)</button>
@@ -823,7 +1102,7 @@ loadQuestion();
     camBtn.disabled = on;
   }
   camBtn.addEventListener('click', function(){ $('startCamBtn').click(); });
-  video.addEventListener('playing', refreshCam);
+  ['playing', 'emptied', 'camchange'].forEach(function(ev){ video.addEventListener(ev, refreshCam); });
 
   function showMenu(){
     clearInterval(timerInterval);
