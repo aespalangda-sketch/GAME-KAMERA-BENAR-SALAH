@@ -1,4 +1,4 @@
-[APLIKASI_GAME_KAMERA_BENAR-SALAH.html](https://github.com/user-attachments/files/32448867/APLIKASI_GAME_KAMERA_BENAR-SALAH.html)
+[APLIKASI_GAME_KAMERA_BENAR-SALAH (1).html](https://github.com/user-attachments/files/32449220/APLIKASI_GAME_KAMERA_BENAR-SALAH.1.html)
 <!DOCTYPE html>
 <html lang="id" class="mx-locked">
 <head>
@@ -490,8 +490,12 @@
     var stage = document.getElementById('stage');   // dicari saat dibuka: elemen ini baru ada setelah skrip ini dibaca
     if(stage) stage.removeAttribute('inert');
     if(gate && gate.parentNode) gate.parentNode.removeChild(gate);
-    // Diminta langsung setelah tombol Masuk ditekan, supaya browser/IFP menampilkan kotak izin kamera.
-    if(typeof window.mxStartCamera === 'function') window.mxStartCamera();
+    // Tutup keyboard layar (di IFP keyboard sering berupa overlay yang membuat kotak izin gagal muncul),
+    // lalu minta izin kamera sesaat kemudian, saat layar sudah bersih.
+    try{ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }catch(_){}
+    setTimeout(function(){
+      if(typeof window.mxStartCamera === 'function') window.mxStartCamera();
+    }, 700);
   }
 
   form.addEventListener('submit', function(e){
@@ -727,9 +731,10 @@ function camActive(){
 function camErrorText(err){
   const n = err && err.name;
   if(n === 'NotAllowedError' || n === 'PermissionDeniedError' || n === 'SecurityError'){
-    return 'Izin kamera belum diberikan. Ketuk ikon gembok atau kamera di dekat alamat web, ' +
-           'ubah Kamera menjadi Izinkan, lalu tekan Aktifkan kamera lagi. ' +
-           'Jika aplikasi ini ditanam di halaman lain, halaman itu harus mengizinkan kamera (allow="camera").';
+    return 'Izin kamera belum diberikan. Jika muncul tulisan "Situs ini tidak dapat meminta izin Anda", ' +
+           'tutup dulu semua menu melayang atau overlay aplikasi lain di layar (toolbar mengambang, perekam layar, dan sejenisnya), ' +
+           'lalu tekan Aktifkan kamera lagi. Jika masih gagal, izinkan Kamera untuk Chrome di Pengaturan perangkat ' +
+           '(Aplikasi > Chrome > Izin > Kamera), atau ketuk ikon gembok dekat alamat web lalu ubah Kamera menjadi Izinkan.';
   }
   if(n === 'NotFoundError' || n === 'DevicesNotFoundError' || n === 'OverconstrainedError'){
     return 'Kamera tidak ditemukan. Pastikan kamera terpasang dan tidak dinonaktifkan, lalu tekan Aktifkan kamera lagi.';
