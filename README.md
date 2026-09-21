@@ -1,4 +1,4 @@
-[APLIKASI_GAME_KAMERA_BENAR-SALAH (1).html](https://github.com/user-attachments/files/32449220/APLIKASI_GAME_KAMERA_BENAR-SALAH.1.html)
+[Uploading APLIKASI_GAME_KAMERA_BENAR-SALAH.html…]()
 <!DOCTYPE html>
 <html lang="id" class="mx-locked">
 <head>
@@ -1670,6 +1670,267 @@ loadQuestion();
     window.addEventListener('orientationchange', scheduleFit);
 
     scheduleFit();
+  });
+})();
+</script>
+
+<!-- ===== TAMBAHAN BARU: menu pilih Jenjang, Kelas, Mapel & Tingkat kesulitan ===== -->
+<style id="mx-preset-style">
+  .mxp-card{margin-top:16px; padding:18px 20px; border-radius:16px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); text-align:left;}
+  .mxp-title{font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:1.05rem;}
+  .mxp-hint{color:var(--muted); font-size:.85rem; margin-top:4px;}
+  .mxp-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px;}
+  .mxp-field label{display:block; font-size:.78rem; color:var(--muted); margin-bottom:4px;}
+  .mxp-field select{width:100%; height:42px; border-radius:10px; border:1px solid rgba(255,255,255,.18); background:#0D1424; color:var(--text); padding:0 10px; font-family:'Inter',sans-serif; font-size:.92rem;}
+  .mxp-actions{display:flex; flex-wrap:wrap; gap:10px; margin-top:14px;}
+  .mxp-btn{font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:.92rem; border:none; padding:12px 20px; border-radius:999px; cursor:pointer; background:var(--a); color:#fff;}
+  .mxp-btn:hover{filter:brightness(1.08);}
+  .mxp-btn.secondary{background:rgba(255,255,255,.1); color:var(--text); border:1px solid rgba(255,255,255,.16);}
+  .mxp-status{font-size:.82rem; color:var(--muted); margin-top:10px;}
+  @media (max-width:520px){ .mxp-grid{grid-template-columns:1fr;} }
+</style>
+<script id="mx-preset-script">
+(function(){
+  'use strict';
+
+  // ---- Bank soal siap pakai (baru sebagian mapel, sisanya menyusul) ----
+  // format tiap soal: {q, correct, wrong, side:'acak'}
+  var PRESET_BANK = {
+    matematika: {
+      mudah: [
+        {q:'5 + 3 = 8', correct:'Benar', wrong:'Salah'},
+        {q:'10 - 4 = 5', correct:'Salah', wrong:'Benar'},
+        {q:'2 x 6 = 12', correct:'Benar', wrong:'Salah'},
+        {q:'9 dibagi 3 sama dengan 3', correct:'Benar', wrong:'Salah'},
+        {q:'7 lebih besar dari 10', correct:'Salah', wrong:'Benar'},
+        {q:'Bilangan genap terkecil adalah 0', correct:'Benar', wrong:'Salah'}
+      ],
+      sedang: [
+        {q:'Luas persegi panjang = panjang x lebar', correct:'Benar', wrong:'Salah'},
+        {q:'1/2 sama nilainya dengan 0,5', correct:'Benar', wrong:'Salah'},
+        {q:'Sudut siku-siku besarnya 60 derajat', correct:'Salah', wrong:'Benar'},
+        {q:'Bilangan prima terkecil adalah 2', correct:'Benar', wrong:'Salah'},
+        {q:'Keliling lingkaran dihitung dengan phi x diameter', correct:'Benar', wrong:'Salah'},
+        {q:'20% dari 200 adalah 40', correct:'Benar', wrong:'Salah'}
+      ],
+      sulit: [
+        {q:'Akar dari 144 adalah 12', correct:'Benar', wrong:'Salah'},
+        {q:'Persamaan kuadrat selalu punya dua akar real', correct:'Salah', wrong:'Benar'},
+        {q:'Hasil dari 2 pangkat 5 adalah 32', correct:'Benar', wrong:'Salah'},
+        {q:'Turunan dari x kuadrat adalah 2x', correct:'Benar', wrong:'Salah'},
+        {q:'Logaritma dari 100 basis 10 adalah 2', correct:'Benar', wrong:'Salah'},
+        {q:'Jumlah sudut dalam segitiga selalu 180 derajat', correct:'Benar', wrong:'Salah'}
+      ]
+    },
+    bindo: {
+      mudah: [
+        {q:'Kalimat tanya diakhiri tanda tanya (?)', correct:'Benar', wrong:'Salah'},
+        {q:'Huruf kapital dipakai di awal kalimat', correct:'Benar', wrong:'Salah'},
+        {q:'Sinonim artinya lawan kata', correct:'Salah', wrong:'Benar'},
+        {q:'Pantun memiliki sampiran dan isi', correct:'Benar', wrong:'Salah'},
+        {q:'Kata kerja disebut juga verba', correct:'Benar', wrong:'Salah'},
+        {q:'Cerpen adalah cerita yang sangat panjang', correct:'Salah', wrong:'Benar'}
+      ],
+      sedang: [
+        {q:'Antonim artinya lawan kata', correct:'Benar', wrong:'Salah'},
+        {q:'Teks eksposisi bertujuan menghibur pembaca', correct:'Salah', wrong:'Benar'},
+        {q:'Kalimat majemuk terdiri dari dua klausa atau lebih', correct:'Benar', wrong:'Salah'},
+        {q:'Ide pokok biasanya ada di kalimat utama paragraf', correct:'Benar', wrong:'Salah'},
+        {q:'Majas personifikasi membandingkan benda mati seolah hidup', correct:'Benar', wrong:'Salah'},
+        {q:'Teks prosedur berisi langkah-langkah melakukan sesuatu', correct:'Benar', wrong:'Salah'}
+      ],
+      sulit: [
+        {q:'Kalimat efektif boleh bertele-tele asalkan panjang', correct:'Salah', wrong:'Benar'},
+        {q:'Konjungsi berfungsi menghubungkan kata atau kalimat', correct:'Benar', wrong:'Salah'},
+        {q:'Teks argumentasi berisi pendapat disertai alasan', correct:'Benar', wrong:'Salah'},
+        {q:'Kata baku selalu sesuai dengan KBBI', correct:'Benar', wrong:'Salah'},
+        {q:'Paragraf deduktif meletakkan ide pokok di akhir', correct:'Salah', wrong:'Benar'},
+        {q:'Resensi adalah ulasan atau penilaian terhadap suatu karya', correct:'Benar', wrong:'Salah'}
+      ]
+    },
+    pkn: {
+      mudah: [
+        {q:'Pancasila memiliki 5 sila', correct:'Benar', wrong:'Salah'},
+        {q:'Bendera Indonesia berwarna merah putih', correct:'Benar', wrong:'Salah'},
+        {q:'Bahasa persatuan Indonesia adalah bahasa Inggris', correct:'Salah', wrong:'Benar'},
+        {q:'Presiden adalah kepala negara Indonesia', correct:'Benar', wrong:'Salah'},
+        {q:'Gotong royong mencerminkan sila kelima Pancasila', correct:'Benar', wrong:'Salah'},
+        {q:'Indonesia merdeka tanggal 17 Agustus 1945', correct:'Benar', wrong:'Salah'}
+      ],
+      sedang: [
+        {q:'UUD 1945 adalah dasar hukum tertinggi di Indonesia', correct:'Benar', wrong:'Salah'},
+        {q:'Indonesia menganut sistem pemerintahan monarki', correct:'Salah', wrong:'Benar'},
+        {q:'DPR bertugas membuat undang-undang bersama pemerintah', correct:'Benar', wrong:'Salah'},
+        {q:'Setiap warga negara punya hak dan kewajiban yang sama di mata hukum', correct:'Benar', wrong:'Salah'},
+        {q:'Bhinneka Tunggal Ika berarti berbeda-beda tetap satu jua', correct:'Benar', wrong:'Salah'},
+        {q:'Pemilu di Indonesia diadakan setiap 10 tahun sekali', correct:'Salah', wrong:'Benar'}
+      ],
+      sulit: [
+        {q:'MPR berwenang mengubah dan menetapkan UUD', correct:'Benar', wrong:'Salah'},
+        {q:'Indonesia menganut sistem pemerintahan presidensial', correct:'Benar', wrong:'Salah'},
+        {q:'Otonomi daerah berarti daerah tidak boleh mengatur urusannya sendiri', correct:'Salah', wrong:'Benar'},
+        {q:'Lembaga yudikatif bertugas mengadili pelanggaran hukum', correct:'Benar', wrong:'Salah'},
+        {q:'Hak asasi manusia bisa dilanggar dengan alasan apa pun', correct:'Salah', wrong:'Benar'},
+        {q:'Checks and balances menjaga keseimbangan antar lembaga negara', correct:'Benar', wrong:'Salah'}
+      ]
+    },
+    ipa: {
+      mudah: [
+        {q:'Matahari terbit dari arah timur', correct:'Benar', wrong:'Salah'},
+        {q:'Tumbuhan membutuhkan air untuk hidup', correct:'Benar', wrong:'Salah'},
+        {q:'Ikan bernapas menggunakan paru-paru', correct:'Salah', wrong:'Benar'},
+        {q:'Air membeku pada suhu 0 derajat Celsius', correct:'Benar', wrong:'Salah'},
+        {q:'Manusia memiliki 2 mata', correct:'Benar', wrong:'Salah'},
+        {q:'Bumi mengelilingi matahari', correct:'Benar', wrong:'Salah'}
+      ],
+      sedang: [
+        {q:'Fotosintesis terjadi pada bagian daun', correct:'Benar', wrong:'Salah'},
+        {q:'Darah manusia dipompa oleh hati', correct:'Salah', wrong:'Benar'},
+        {q:'Gaya gravitasi menarik benda ke arah bumi', correct:'Benar', wrong:'Salah'},
+        {q:'Rantai makanan menggambarkan aliran energi antar makhluk hidup', correct:'Benar', wrong:'Salah'},
+        {q:'Logam adalah penghantar panas yang buruk', correct:'Salah', wrong:'Benar'},
+        {q:'Oksigen dibutuhkan manusia untuk bernapas', correct:'Benar', wrong:'Salah'}
+      ],
+      sulit: [
+        {q:'Mitokondria adalah tempat respirasi sel', correct:'Benar', wrong:'Salah'},
+        {q:'Hukum Newton pertama membahas tentang percepatan', correct:'Salah', wrong:'Benar'},
+        {q:'Atom terdiri dari proton, neutron, dan elektron', correct:'Benar', wrong:'Salah'},
+        {q:'Reaksi eksoterm melepaskan kalor ke lingkungan', correct:'Benar', wrong:'Salah'},
+        {q:'DNA menyimpan informasi genetik makhluk hidup', correct:'Benar', wrong:'Salah'},
+        {q:'Tekanan udara semakin tinggi di dataran tinggi', correct:'Salah', wrong:'Benar'}
+      ]
+    }
+  };
+
+  var MAPEL_LIST = [
+    {v:'bindo', label:'Bahasa Indonesia'},
+    {v:'binggris', label:'Bahasa Inggris'},
+    {v:'pkn', label:'PKn'},
+    {v:'agama_islam', label:'Pendidikan Agama Islam'},
+    {v:'agama_lain', label:'Pendidikan Agama Lainnya'},
+    {v:'matematika', label:'Matematika'},
+    {v:'informatika', label:'Informatika'},
+    {v:'seni_budaya', label:'Seni Budaya'},
+    {v:'prakarya', label:'Prakarya'},
+    {v:'ipa', label:'IPA'},
+    {v:'ips', label:'IPS'},
+    {v:'sosiologi', label:'Sosiologi'},
+    {v:'koding', label:'Koding'},
+    {v:'penjas', label:'Penjas'},
+    {v:'umum', label:'Pengetahuan Umum'}
+  ];
+
+  var JENJANG = {
+    sd: {label:'SD', kelas:[1,2,3,4,5,6]},
+    smp: {label:'SMP/MTs', kelas:[7,8,9]},
+    sma: {label:'SMA/SMK', kelas:[10,11,12]}
+  };
+
+  function ready(fn){
+    if(document.readyState !== 'loading') fn();
+    else document.addEventListener('DOMContentLoaded', fn);
+  }
+
+  ready(function(){
+    var sheet = document.querySelector('#mxStart .mx-sheet');
+    var timerCard = document.querySelector('#mxStart .mx-card');
+    if(!sheet || !timerCard) return;
+
+    var mapelOptions = MAPEL_LIST.map(function(m){
+      return '<option value="'+m.v+'">'+m.label+'</option>';
+    }).join('');
+
+    var html = ''
+      + '<div class="mxp-card" id="mxpCard">'
+      + '  <div class="mxp-title">Pilih mapel &amp; jenjang siap pakai</div>'
+      + '  <div class="mxp-hint">Pilih jenjang, kelas, mapel dan tingkat kesulitan, lalu muat soalnya. Soal tetap bisa diedit setelah dimuat.</div>'
+      + '  <div class="mxp-grid">'
+      + '    <div class="mxp-field"><label for="mxpJenjang">Jenjang</label>'
+      + '      <select id="mxpJenjang">'
+      + '        <option value="sd">SD (Kelas 1-6)</option>'
+      + '        <option value="smp">SMP/MTs (Kelas 7-9)</option>'
+      + '        <option value="sma">SMA/SMK (Kelas 10-12)</option>'
+      + '      </select></div>'
+      + '    <div class="mxp-field"><label for="mxpKelas">Kelas</label>'
+      + '      <select id="mxpKelas"></select></div>'
+      + '    <div class="mxp-field"><label for="mxpMapel">Mapel</label>'
+      + '      <select id="mxpMapel">'+mapelOptions+'</select></div>'
+      + '    <div class="mxp-field"><label for="mxpTingkat">Tingkat kesulitan</label>'
+      + '      <select id="mxpTingkat">'
+      + '        <option value="mudah">Mudah</option>'
+      + '        <option value="sedang" selected>Sedang</option>'
+      + '        <option value="sulit">Sulit</option>'
+      + '      </select></div>'
+      + '  </div>'
+      + '  <div class="mxp-actions">'
+      + '    <button type="button" class="mxp-btn" id="mxpLoad">Muat soal ini</button>'
+      + '    <button type="button" class="mxp-btn secondary" id="mxpLoadEdit">Muat lalu buka Edit soal</button>'
+      + '  </div>'
+      + '  <div class="mxp-status" id="mxpStatus"></div>'
+      + '</div>';
+
+    timerCard.insertAdjacentHTML('afterend', html);
+
+    var jenjangEl = document.getElementById('mxpJenjang');
+    var kelasEl = document.getElementById('mxpKelas');
+    var mapelEl = document.getElementById('mxpMapel');
+    var tingkatEl = document.getElementById('mxpTingkat');
+    var statusEl = document.getElementById('mxpStatus');
+
+    function refreshKelas(){
+      var j = JENJANG[jenjangEl.value] || JENJANG.sd;
+      kelasEl.innerHTML = j.kelas.map(function(k){ return '<option value="'+k+'">Kelas '+k+'</option>'; }).join('');
+    }
+    jenjangEl.addEventListener('change', refreshKelas);
+    refreshKelas();
+
+    function findMapelLabel(v){
+      for(var i=0;i<MAPEL_LIST.length;i++){ if(MAPEL_LIST[i].v === v) return MAPEL_LIST[i].label; }
+      return v;
+    }
+
+    function doLoad(openEditor){
+      var mapel = mapelEl.value, tingkat = tingkatEl.value;
+      var jenjangLabel = (JENJANG[jenjangEl.value] || JENJANG.sd).label;
+      var kelas = kelasEl.value;
+      var set = PRESET_BANK[mapel] && PRESET_BANK[mapel][tingkat];
+
+      if(!set || !set.length){
+        statusEl.textContent = 'Bank soal untuk "' + findMapelLabel(mapel) + '" tingkat ' + tingkat + ' sedang disiapkan dan belum tersedia. Silakan pilih mapel lain (Matematika, Bahasa Indonesia, PKn, IPA sudah tersedia), atau isi manual lewat "Edit soal".';
+        return;
+      }
+
+      var current = null;
+      try{ current = localStorage.getItem('kuisBK.v1.soal'); }catch(e){}
+      var hasCurrent = false;
+      try{ hasCurrent = current && JSON.parse(current).length > 0; }catch(e){}
+
+      if(hasCurrent && !confirm('Ganti soal saat ini dengan ' + set.length + ' soal siap pakai (' + findMapelLabel(mapel) + ' - ' + jenjangLabel + ' Kelas ' + kelas + ' - ' + tingkat + ')? Soal lama akan digantikan (masih bisa diedit lagi setelah dimuat).')){
+        return;
+      }
+
+      var newBank = set.map(function(it){ return {q:it.q, correct:it.correct, wrong:it.wrong, side:'acak'}; });
+      try{
+        localStorage.setItem('kuisBK.v1.soal', JSON.stringify(newBank));
+        if(openEditor) localStorage.setItem('kuisBK.v1.openEditor', '1');
+      }catch(e){
+        statusEl.textContent = 'Browser menolak penyimpanan lokal. Coba gunakan browser lain atau mode bukan privat.';
+        return;
+      }
+      location.reload();
+    }
+
+    document.getElementById('mxpLoad').addEventListener('click', function(){ doLoad(false); });
+    document.getElementById('mxpLoadEdit').addEventListener('click', function(){ doLoad(true); });
+
+    // Jika diminta buka editor otomatis setelah reload
+    try{
+      if(localStorage.getItem('kuisBK.v1.openEditor') === '1'){
+        localStorage.removeItem('kuisBK.v1.openEditor');
+        var editBtn = document.getElementById('mxEditBtn');
+        if(editBtn) setTimeout(function(){ editBtn.click(); }, 50);
+      }
+    }catch(e){}
   });
 })();
 </script>
