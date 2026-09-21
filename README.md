@@ -1,4 +1,4 @@
-[APLIKASI_GAME_KAMERA_PILIHAN_JAWABAN_3_PENJAS_FIXED(3).html](https://github.com/user-attachments/files/32476331/APLIKASI_GAME_KAMERA_PILIHAN_JAWABAN_3_PENJAS_FIXED.3.html)
+[APLIKASI_GAME_KAMERA_PILIHAN_JAWABAN.html](https://github.com/user-attachments/files/32476331/APLIKASI_GAME_KAMERA_PILIHAN_JAWABAN_3_PENJAS_FIXED.3.html)
 <!DOCTYPE html>
 <html lang="id" class="mx-locked">
 <head>
