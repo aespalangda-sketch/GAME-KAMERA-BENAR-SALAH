@@ -1,4 +1,4 @@
-[APLIKASI_GAME_KAMERA_PILIHAN_JAWABAN_3_PENJAS_FIXED_3(2).html](https://github.com/user-attachments/files/32509868/APLIKASI_GAME_KAMERA_PILIHAN_JAWABAN_3_PENJAS_FIXED_3.2.html)
+[APLIKASI_GAME_KAMERA_PILIHAN_JAWABAN_3_PENJAS_FIXED_3(3).html](https://github.com/user-attachments/files/32510422/APLIKASI_GAME_KAMERA_PILIHAN_JAWABAN_3_PENJAS_FIXED_3.3.html)
 <!DOCTYPE html>
 <html lang="id" class="mx-locked">
 <head>
@@ -3051,8 +3051,9 @@ loadQuestion();
 <script id="mx-cam-force-script">
 (function(){
   'use strict';
-  var btn = document.getElementById('mxCamForceBtn');
+  var forceBtn = document.getElementById('mxCamForceBtn');
   var msg = document.getElementById('mxCamForceMsg');
+  var requesting = false;
 
   function showMsg(text){
     if(!msg) return;
@@ -3060,7 +3061,10 @@ loadQuestion();
     msg.style.display = text ? 'block' : 'none';
   }
 
-  btn.addEventListener('click', function(){
+  // Fungsi inti: minta izin kamera langsung ke browser dan pasangkan ke elemen <video>
+  // aplikasi jika ada. Dipakai bersama oleh beberapa tombol supaya semuanya pasti berfungsi.
+  function requestCameraDirect(triggerBtn, disableOnSuccess){
+    if(requesting) return;
     if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
       showMsg(window.isSecureContext === false
         ? 'Kamera hanya bisa dipakai lewat alamat aman (https:// atau localhost). Buka aplikasi memakai link https://.'
@@ -3068,12 +3072,16 @@ loadQuestion();
       return;
     }
 
+    requesting = true;
     showMsg('Meminta izin kamera... pilih "Izinkan" pada kotak yang muncul.');
-    btn.disabled = true;
+    if(triggerBtn) triggerBtn.disabled = true;
 
     navigator.mediaDevices.getUserMedia({ video: true, audio: false }).then(function(stream){
       showMsg('');
-      btn.textContent = 'Kamera Sudah Diizinkan';
+      if(forceBtn){ forceBtn.textContent = 'Kamera Sudah Diizinkan'; forceBtn.disabled = true; }
+      if(triggerBtn && triggerBtn !== forceBtn && disableOnSuccess){
+        triggerBtn.textContent = 'Kamera aktif';
+      }
 
       var video = document.getElementById('video');
       if(video){
@@ -3090,7 +3098,7 @@ loadQuestion();
       // Beritahu logika kamera bawaan (jika ada) agar tampilannya ikut diperbarui.
       if(typeof window.camChanged === 'function'){ try{ window.camChanged(); }catch(_){} }
     }).catch(function(err){
-      btn.disabled = false;
+      if(triggerBtn) triggerBtn.disabled = false;
       var n = err && err.name;
       if(n === 'NotAllowedError' || n === 'PermissionDeniedError' || n === 'SecurityError'){
         showMsg('Izin kamera ditolak/diblokir. Ketuk ikon gembok di address bar (atau Pengaturan Situs), ubah izin Kamera menjadi Izinkan, lalu tekan tombol ini lagi. Di IFP/tablet Android: buka Pengaturan > Aplikasi > browser yang dipakai > Izin > aktifkan Kamera.');
@@ -3101,8 +3109,25 @@ loadQuestion();
       } else {
         showMsg('Kamera tidak dapat dibuka (' + (n || 'kesalahan tidak dikenal') + '). Coba tekan tombol ini lagi.');
       }
+    }).finally(function(){
+      requesting = false;
     });
-  });
+  }
+
+  if(forceBtn){
+    forceBtn.addEventListener('click', function(){ requestCameraDirect(forceBtn, false); });
+  }
+
+  // ===== PERBAIKAN: tombol "Aktifkan kamera" di halaman awal (menu mulai kuis, bagian bawah) =====
+  // Tombol ini (id="mxCamBtn") seharusnya sudah tersambung oleh skrip lain di halaman, tapi jika
+  // sambungan itu gagal terpasang, kita pasang ulang di sini secara independen supaya tombolnya
+  // tetap berfungsi tanpa perlu mengubah kode lain.
+  var startMenuCamBtn = document.getElementById('mxCamBtn');
+  if(startMenuCamBtn){
+    startMenuCamBtn.addEventListener('click', function(){
+      requestCameraDirect(startMenuCamBtn, true);
+    });
+  }
 })();
 </script>
 
