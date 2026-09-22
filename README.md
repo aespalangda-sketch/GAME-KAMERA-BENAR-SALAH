@@ -1,4 +1,4 @@
-[APLIKASI_GAME_KAMERA_PILIHAN_JAWABAN_3_PENJAS__.html](https://github.com/user-attachments/files/32496514/APLIKASI_GAME_KAMERA_PILIHAN_JAWABAN_3_PENJAS_FIXED_3_.html)
+[APLIKASI_GAME_KAMERA_PILIHAN_JAWABAN_3_PENJAS_FIXED_3.html](https://github.com/user-attachments/files/32509215/APLIKASI_GAME_KAMERA_PILIHAN_JAWABAN_3_PENJAS_FIXED_3.html)
 <!DOCTYPE html>
 <html lang="id" class="mx-locked">
 <head>
@@ -782,16 +782,70 @@ function camErrorText(err){
     return 'Izin kamera belum diberikan. Jika muncul tulisan "Situs ini tidak dapat meminta izin Anda", ' +
            'tutup dulu semua menu melayang atau overlay aplikasi lain di layar (toolbar mengambang, perekam layar, dan sejenisnya), ' +
            'lalu tekan Aktifkan kamera lagi. Jika masih gagal, izinkan Kamera untuk Chrome di Pengaturan perangkat ' +
-           '(Aplikasi > Chrome > Izin > Kamera), atau ketuk ikon gembok dekat alamat web lalu ubah Kamera menjadi Izinkan.';
+           '(Aplikasi > Chrome > Izin > Kamera), atau ketuk ikon gembok dekat alamat web lalu ubah Kamera menjadi Izinkan. ' +
+           'Khusus layar interaktif (IFP): buka Pengaturan Android bawaan panel > Aplikasi > pilih browser yang dipakai (Chrome/Browser bawaan) > Izin, lalu aktifkan izin Kamera secara manual — sebagian panel tidak menampilkan kotak izin sama sekali sebelum izin ini dinyalakan di pengaturan sistem.';
   }
   if(n === 'NotFoundError' || n === 'DevicesNotFoundError' || n === 'OverconstrainedError'){
-    return 'Kamera tidak ditemukan. Pastikan kamera terpasang dan tidak dinonaktifkan, lalu tekan Aktifkan kamera lagi.';
+    return 'Kamera tidak ditemukan dengan pengaturan ini. Jika perangkat punya lebih dari satu kamera (umum pada IFP, misalnya kamera bawaan + webcam USB), coba pilih kamera lain dari daftar di bawah lalu tekan Aktifkan kamera lagi. Pastikan juga webcam USB sudah tersambung dengan benar.';
   }
   if(n === 'NotReadableError' || n === 'TrackStartError' || n === 'AbortError'){
-    return 'Kamera sedang dipakai aplikasi lain. Tutup aplikasi atau tab yang memakai kamera, lalu tekan Aktifkan kamera lagi.';
+    return 'Kamera sedang dipakai aplikasi lain, atau ditahan oleh sistem panel. Tutup aplikasi/tab lain yang memakai kamera (termasuk aplikasi anotasi/whiteboard bawaan IFP yang kadang mengunci kamera), lalu tekan Aktifkan kamera lagi.';
   }
-  return 'Kamera tidak dapat dibuka (' + (n || 'kesalahan tidak dikenal') + '). Tekan Aktifkan kamera untuk mencoba lagi.';
+  return 'Kamera tidak dapat dibuka (' + (n || 'kesalahan tidak dikenal') + '). Tekan Aktifkan kamera untuk mencoba lagi. Jika ini perangkat IFP, coba juga pilih kamera lain dari daftar di bawah.';
 }
+
+// ---- Pemilihan kamera (penting untuk IFP: sering ada beberapa kamera / webcam USB eksternal) ----
+const camDeviceWrap = document.getElementById('mxCamDeviceWrap');
+const camDeviceSelect = document.getElementById('mxCamDeviceSelect');
+let preferredDeviceId = null;
+
+async function refreshCameraList(){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+  try{
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const cams = devices.filter(d => d.kind === 'videoinput');
+    if(cams.length === 0){ camDeviceWrap.style.display = 'none'; return; }
+    const prevValue = camDeviceSelect.value;
+    camDeviceSelect.innerHTML = '';
+    cams.forEach((d, i) => {
+      const opt = document.createElement('option');
+      opt.value = d.deviceId;
+      opt.textContent = d.label || ('Kamera ' + (i + 1));
+      camDeviceSelect.appendChild(opt);
+    });
+    // Tampilkan pemilih kalau ada lebih dari satu kamera terdeteksi (khas perangkat IFP)
+    camDeviceWrap.style.display = cams.length > 1 ? '' : 'none';
+    if(prevValue && cams.some(d => d.deviceId === prevValue)){
+      camDeviceSelect.value = prevValue;
+    } else if(preferredDeviceId && cams.some(d => d.deviceId === preferredDeviceId)){
+      camDeviceSelect.value = preferredDeviceId;
+    }
+  }catch(_){ /* enumerasi gagal, biarkan pemilih tersembunyi */ }
+}
+
+camDeviceSelect.addEventListener('change', function(){
+  preferredDeviceId = camDeviceSelect.value || null;
+  if(camActive()){
+    // Ganti kamera langsung: matikan stream saat ini lalu sambungkan ulang dengan kamera terpilih
+    stopCamera();
+    startCamera();
+  }
+});
+
+function stopCamera(){
+  if(camStream){
+    camStream.getTracks().forEach(t => { try{ t.stop(); }catch(_){} });
+  }
+  camStream = null;
+  video.srcObject = null;
+  camPlaceholder.style.display = '';
+  camChanged();
+}
+
+if(navigator.mediaDevices && 'ondevicechange' in navigator.mediaDevices){
+  navigator.mediaDevices.addEventListener('devicechange', refreshCameraList);
+}
+refreshCameraList();
 
 function onCamEnded(){
   camStream = null;
@@ -819,18 +873,31 @@ async function startCamera(){
 
   camBusy = true;
   camNotify('Meminta izin kamera. Pilih Izinkan pada kotak yang muncul.', false);
+  const chosenId = preferredDeviceId || (camDeviceSelect.value || null);
   try{
     let stream;
     try{
-      stream = await navigator.mediaDevices.getUserMedia({
-        video:{ facingMode:'user', width:{ideal:1280}, height:{ideal:720} },
-        audio:false
-      });
+      // Percobaan 1: kamera yang dipilih pengguna (jika ada), pakai facingMode hanya kalau belum memilih kamera tertentu
+      const baseVideo = chosenId
+        ? { deviceId:{ exact: chosenId }, width:{ideal:1280}, height:{ideal:720} }
+        : { facingMode:'user', width:{ideal:1280}, height:{ideal:720} };
+      stream = await navigator.mediaDevices.getUserMedia({ video: baseVideo, audio:false });
     }catch(first){
       const n = first && first.name;
-      // Izin ditolak atau kamera dipakai: tidak perlu dicoba ulang. Selain itu, coba pengaturan paling sederhana.
+      // Izin ditolak atau kamera dipakai: tidak perlu dicoba ulang dengan constraint lain.
       if(n === 'NotAllowedError' || n === 'PermissionDeniedError' || n === 'SecurityError' || n === 'NotReadableError') throw first;
-      stream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false });
+      try{
+        // Percobaan 2: deviceId saja tanpa facingMode/resolusi ideal (perangkat IFP kadang menolak constraint gabungan)
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: chosenId ? { deviceId:{ exact: chosenId } } : true,
+          audio:false
+        });
+      }catch(second){
+        const n2 = second && second.name;
+        if(n2 === 'NotAllowedError' || n2 === 'PermissionDeniedError' || n2 === 'SecurityError' || n2 === 'NotReadableError') throw second;
+        // Percobaan 3: paling longgar, biar browser/panel pilih kamera apa pun yang tersedia
+        stream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false });
+      }
     }
     camStream = stream;
     stream.getVideoTracks().forEach(t => t.addEventListener('ended', onCamEnded));
@@ -838,6 +905,8 @@ async function startCamera(){
     camPlaceholder.style.display = 'none';
     camNotify('', false);
     try{ await video.play(); }catch(_){ /* autoplay sudah diatur lewat atribut video */ }
+    // Setelah izin diberikan, label kamera baru terbaca — perbarui daftar pilihan
+    refreshCameraList();
   }catch(err){
     camPlaceholder.style.display = '';
     camNotify(camErrorText(err), true);
@@ -977,6 +1046,10 @@ loadQuestion();
           <button type="button" class="mx-btn" id="mxCamBtn">Aktifkan kamera</button>
         </div>
         <p id="mxCamStatus" role="status" aria-live="polite"></p>
+        <div id="mxCamDeviceWrap" style="display:none; margin:10px auto 0; max-width:560px;">
+          <label for="mxCamDeviceSelect" style="display:block; font-size:.8rem; color:var(--muted); margin-bottom:4px;">Pilih kamera (perangkat IFP/panel layar sentuh sering punya lebih dari satu kamera atau webcam USB eksternal)</label>
+          <select id="mxCamDeviceSelect" style="width:100%; padding:8px 10px; border-radius:8px; background:#0f1826; color:var(--text); border:1px solid rgba(255,255,255,.15);"></select>
+        </div>
         <div class="mx-links">
           <button type="button" class="mx-link" id="mxImportS">Impor soal (.json)</button>
           <button type="button" class="mx-link" id="mxExportS">Ekspor soal (.json)</button>
