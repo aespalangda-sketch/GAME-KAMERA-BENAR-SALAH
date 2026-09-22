@@ -1,4 +1,4 @@
-[APLIKASI_GAME_KAMERA_PILIHAN_JAWABAN_3_PENJAS_FIXED_3_(1).html](https://github.com/user-attachments/files/32519389/APLIKASI_GAME_KAMERA_PILIHAN_JAWABAN_3_PENJAS_FIXED_3_.1.html)
+[APLIKASI_GAME_KAMERA_PILIHAN_JAWABAN_3_PENJAS_FIXED_3_(2).html](https://github.com/user-attachments/files/32520120/APLIKASI_GAME_KAMERA_PILIHAN_JAWABAN_3_PENJAS_FIXED_3_.2.html)
 <!DOCTYPE html>
 <html lang="id" class="mx-locked">
 <head>
@@ -418,6 +418,7 @@
         </a>
       </div>
     </div>
+    <p style="margin-top:16px; font-size:0.75rem; line-height:1.5; text-align:center; color:#e53935;">Aplikasi ini adalah karya asli AES (@aes_435). Jika Anda mendapatkan aplikasi ini dari pihak lain (bukan langsung dari admin resmi di atas), kemungkinan ini hasil jual-beli tanpa izin. Mohon laporkan ke kontak di atas.</p>
   </form>
 </div>
 
@@ -979,7 +980,7 @@ loadQuestion();
           <button type="button" class="mx-link" id="mxImportS">Impor soal (.json)</button>
           <button type="button" class="mx-link" id="mxExportS">Ekspor soal (.json)</button>
         </div>
-        <p style="margin-top:16px; font-size:0.75rem; line-height:1.5; text-align:center; opacity:0.8;">Aplikasi ini adalah karya asli AES (@aes_435). Jika Anda mendapatkan aplikasi ini dari pihak lain (bukan langsung dari admin resmi di atas), kemungkinan ini hasil jual-beli tanpa izin. Mohon laporkan ke kontak di atas.</p>
+        <p style="margin-top:16px; font-size:0.75rem; line-height:1.5; text-align:center; color:#e53935;">Aplikasi ini adalah karya asli AES (@aes_435). Jika Anda mendapatkan aplikasi ini dari pihak lain (bukan langsung dari admin resmi di atas), kemungkinan ini hasil jual-beli tanpa izin. Mohon laporkan ke kontak di atas.</p>
       </div>
     </div>
 
