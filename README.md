@@ -1,4 +1,4 @@
-[APLIKASI_GAME_KAMERA_PILIHAN_JAWABAN.html](https://github.com/user-attachments/files/32476331/APLIKASI_GAME_KAMERA_PILIHAN_JAWABAN_3_PENJAS_FIXED.3.html)
+[APLIKASI_GAME_KAMERA_PILIHAN_JAWABAN_3_PENJAS__.html](https://github.com/user-attachments/files/32496514/APLIKASI_GAME_KAMERA_PILIHAN_JAWABAN_3_PENJAS_FIXED_3_.html)
 <!DOCTYPE html>
 <html lang="id" class="mx-locked">
 <head>
@@ -377,6 +377,7 @@
   }
   .mxg-social-row a:hover{background:rgba(255,255,255,.18); filter:brightness(1.08);}
   .mxg-social-row svg{width:22px; height:22px;}
+  .mxg-report{margin-top:12px; color:#FCA5A5; font-size:.78rem; line-height:1.45;}
   .mxg-card.shake{animation:mxgShake .38s;}
   @keyframes mxgShake{0%,100%{transform:translateX(0);}20%{transform:translateX(-9px);}40%{transform:translateX(8px);}60%{transform:translateX(-6px);}80%{transform:translateX(4px);}}
   @media (prefers-reduced-motion:reduce){.mxg-card.shake{animation:none;}}
@@ -417,6 +418,7 @@
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.5 3c.36 1.94 1.6 3.34 3.5 3.8v2.63a6.86 6.86 0 0 1-3.5-1.17v6.1a5.64 5.64 0 1 1-5.64-5.64c.2 0 .4.01.6.04v2.7a2.97 2.97 0 1 0 2.4 2.9V3h2.64z"/></svg>
         </a>
       </div>
+      <p class="mxg-report">Aplikasi ini adalah karya asli AES (@aes_435). Jika Anda mendapatkan aplikasi ini dari pihak lain (bukan langsung dari admin resmi di atas), kemungkinan ini hasil jual-beli tanpa izin. Mohon laporkan ke kontak di atas.</p>
     </div>
   </form>
 </div>
