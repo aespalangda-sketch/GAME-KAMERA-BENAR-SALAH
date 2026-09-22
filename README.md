@@ -1,4 +1,4 @@
-[APLIKASI_GAME_KAMERA_PILIHAN_JAWABAN_3_PENJAS_FIXED_3.html](https://github.com/user-attachments/files/32509215/APLIKASI_GAME_KAMERA_PILIHAN_JAWABAN_3_PENJAS_FIXED_3.html)
+[APLIKASI_GAME_KAMERA_PILIHAN_JAWABAN_3_PENJAS_FIXED_3(2).html](https://github.com/user-attachments/files/32509868/APLIKASI_GAME_KAMERA_PILIHAN_JAWABAN_3_PENJAS_FIXED_3.2.html)
 <!DOCTYPE html>
 <html lang="id" class="mx-locked">
 <head>
@@ -3026,6 +3026,82 @@ loadQuestion();
         if(editBtn) setTimeout(function(){ editBtn.click(); }, 50);
       }
     }catch(e){}
+  });
+})();
+</script>
+
+<!-- ===== TAMBAHAN: pemanggil aktifkan kamera (mandiri, tidak mengubah kode lain di atas) ===== -->
+<style id="mx-cam-force-style">
+  html.mx-locked #mxCamForce{ display:none; }
+  #mxCamForce{ position:fixed; top:12px; left:12px; z-index:2147483647; font-family:'Inter',system-ui,sans-serif; }
+  #mxCamForceBtn{
+    font-weight:600; font-size:.95rem; color:#fff; background:#2563eb; border:none;
+    border-radius:999px; padding:10px 18px; cursor:pointer; box-shadow:0 2px 10px rgba(0,0,0,.35);
+  }
+  #mxCamForceBtn:disabled{ opacity:.6; cursor:default; }
+  #mxCamForceMsg{
+    margin-top:6px; max-width:270px; font-size:.78rem; line-height:1.4; color:#fca5a5;
+    background:rgba(7,11,20,.9); padding:8px 10px; border-radius:8px; display:none;
+  }
+</style>
+<div id="mxCamForce">
+  <button type="button" id="mxCamForceBtn">Aktifkan Kamera (Minta Izin)</button>
+  <div id="mxCamForceMsg" role="status" aria-live="polite"></div>
+</div>
+<script id="mx-cam-force-script">
+(function(){
+  'use strict';
+  var btn = document.getElementById('mxCamForceBtn');
+  var msg = document.getElementById('mxCamForceMsg');
+
+  function showMsg(text){
+    if(!msg) return;
+    msg.textContent = text || '';
+    msg.style.display = text ? 'block' : 'none';
+  }
+
+  btn.addEventListener('click', function(){
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      showMsg(window.isSecureContext === false
+        ? 'Kamera hanya bisa dipakai lewat alamat aman (https:// atau localhost). Buka aplikasi memakai link https://.'
+        : 'Browser ini tidak mendukung akses kamera. Gunakan Chrome, Edge, atau Safari versi terbaru.');
+      return;
+    }
+
+    showMsg('Meminta izin kamera... pilih "Izinkan" pada kotak yang muncul.');
+    btn.disabled = true;
+
+    navigator.mediaDevices.getUserMedia({ video: true, audio: false }).then(function(stream){
+      showMsg('');
+      btn.textContent = 'Kamera Sudah Diizinkan';
+
+      var video = document.getElementById('video');
+      if(video){
+        video.srcObject = stream;
+        if(video.play) video.play().catch(function(){});
+        var placeholder = document.getElementById('cam-placeholder');
+        if(placeholder) placeholder.style.display = 'none';
+      } else {
+        // Tidak ada elemen video di halaman ini: hentikan track, tujuan tombol ini
+        // hanya untuk memastikan kotak izin kamera muncul dan izinnya tersimpan di browser.
+        stream.getTracks().forEach(function(t){ t.stop(); });
+      }
+
+      // Beritahu logika kamera bawaan (jika ada) agar tampilannya ikut diperbarui.
+      if(typeof window.camChanged === 'function'){ try{ window.camChanged(); }catch(_){} }
+    }).catch(function(err){
+      btn.disabled = false;
+      var n = err && err.name;
+      if(n === 'NotAllowedError' || n === 'PermissionDeniedError' || n === 'SecurityError'){
+        showMsg('Izin kamera ditolak/diblokir. Ketuk ikon gembok di address bar (atau Pengaturan Situs), ubah izin Kamera menjadi Izinkan, lalu tekan tombol ini lagi. Di IFP/tablet Android: buka Pengaturan > Aplikasi > browser yang dipakai > Izin > aktifkan Kamera.');
+      } else if(n === 'NotFoundError' || n === 'DevicesNotFoundError' || n === 'OverconstrainedError'){
+        showMsg('Kamera tidak ditemukan pada perangkat ini.');
+      } else if(n === 'NotReadableError' || n === 'TrackStartError' || n === 'AbortError'){
+        showMsg('Kamera sedang dipakai aplikasi lain. Tutup aplikasi/tab lain yang memakai kamera, lalu coba lagi.');
+      } else {
+        showMsg('Kamera tidak dapat dibuka (' + (n || 'kesalahan tidak dikenal') + '). Coba tekan tombol ini lagi.');
+      }
+    });
   });
 })();
 </script>
