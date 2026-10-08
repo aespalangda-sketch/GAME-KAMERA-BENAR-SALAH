@@ -1,3 +1,4 @@
+[index.html](https://github.com/user-attachments/files/33200069/index.html)
 [APLIKASI_GAME_KAMERA_PILIHAN_JAWABAN_3_PENJAS_FIXED_3_(2).html](https://github.com/user-attachments/files/32520120/APLIKASI_GAME_KAMERA_PILIHAN_JAWABAN_3_PENJAS_FIXED_3_.2.html)
 <!DOCTYPE html>
 <html lang="id" class="mx-locked">
@@ -2957,5 +2958,111 @@ loadQuestion();
 })();
 </script>
 
+
+<!-- ===== TAMBAHAN: koreksi mirror kamera otomatis/manual (kode asli di atas tidak diubah sama sekali) ===== -->
+<style id="mx-mirror-style">
+  /* Kode asli selalu memirror video. Kelas ini HANYA menambah satu pembalikan lagi (membatalkan mirror) bila perangkat sudah memirror sendiri. */
+  #cam-wrap.mx-unmirror{transform:scaleX(-1);}
+  #cam-wrap.mx-unmirror #cam-placeholder{transform:scaleX(-1);}
+  /* Pojok kiri bawah: area yang tidak dipakai tombol/elemen lain */
+  #mxCamFix{position:absolute; left:16px; bottom:18px; z-index:16; display:flex; flex-direction:column; align-items:flex-start; gap:6px;}
+  #mxCamFix .mx-game-btn{font-size:.75rem; padding:7px 12px; box-shadow:0 4px 12px rgba(0,0,0,.4);}
+  #mxCalMsg{display:none; position:absolute; left:50%; bottom:84px; transform:translateX(-50%); z-index:60;
+    background:rgba(7,11,20,.92); border:1px solid rgba(255,255,255,.2); border-radius:14px; padding:12px 20px;
+    font:600 1.05rem 'Space Grotesk',sans-serif; text-align:center; max-width:90vw; color:var(--text);}
+</style>
+<script id="mx-mirror-script">
+(function(){
+  'use strict';
+  var stage = document.getElementById('stage');
+  var video = document.getElementById('video');
+  var wrap = document.getElementById('cam-wrap');
+  if(!stage || !video || !wrap) return;
+
+  stage.insertAdjacentHTML('beforeend',
+    '<div id="mxCamFix">' +
+      '<button type="button" class="mx-game-btn neutral" id="mxMirrorBtn">Cermin: Ya</button>' +
+      '<button type="button" class="mx-game-btn neutral" id="mxCalBtn">Kalibrasi kamera</button>' +
+    '</div>' +
+    '<div id="mxCalMsg" role="status" aria-live="polite"></div>');
+
+  var KEY = 'kuisBK.v1.mirror';   // 'flip' = tampilan dicerminkan (seperti kode asli) | 'normal' = batalkan mirror | kosong = otomatis
+  var btn = document.getElementById('mxMirrorBtn');
+  var calBtn = document.getElementById('mxCalBtn');
+  var msg = document.getElementById('mxCalMsg');
+  var mirrorOn = true, calibrating = false;
+
+  function getSaved(){ try{ return localStorage.getItem(KEY); }catch(e){ return null; } }
+  function setSaved(v){ try{ localStorage.setItem(KEY, v); }catch(e){} }
+
+  // Tebakan awal: sama seperti kode asli (mirror), kecuali jelas kamera belakang
+  function guess(){
+    var tr = video.srcObject && video.srcObject.getVideoTracks && video.srcObject.getVideoTracks()[0];
+    var s = (tr && tr.getSettings) ? tr.getSettings() : {};
+    var label = ((tr && tr.label) || '').toLowerCase();
+    if(s.facingMode === 'environment') return false;
+    if(/back|rear|environment|belakang/.test(label)) return false;
+    return true;
+  }
+
+  function apply(m){
+    mirrorOn = m;
+    wrap.classList.toggle('mx-unmirror', !m);
+    btn.textContent = 'Cermin: ' + (m ? 'Ya' : 'Tidak');
+  }
+  function refresh(){
+    var s = getSaved();
+    apply(s === 'flip' ? true : s === 'normal' ? false : guess());
+  }
+  function say(text, ms){
+    msg.textContent = text; msg.style.display = 'block';
+    if(ms) setTimeout(function(){ msg.style.display = 'none'; }, ms);
+  }
+
+  btn.addEventListener('click', function(){
+    setSaved(mirrorOn ? 'normal' : 'flip');
+    apply(!mirrorOn);
+  });
+
+  // Kalibrasi: bandingkan posisi gerakan pada frame MENTAH (drawImage mengabaikan transform CSS)
+  calBtn.addEventListener('click', function(){
+    if(calibrating) return;
+    if(!video.videoWidth){ say('Aktifkan kamera dulu.', 2500); return; }
+    calibrating = true;
+    var W = 64, H = 36;
+    var c = document.createElement('canvas'); c.width = W; c.height = H;
+    var g = c.getContext('2d', { willReadFrequently:true });
+    var prev = null, sum = 0, cnt = 0, t = 0, TOTAL = 40;   // 40 x 100 ms = 4 detik
+
+    var iv = setInterval(function(){
+      g.drawImage(video, 0, 0, W, H);
+      var d = g.getImageData(0, 0, W, H).data, gray = new Uint8Array(W * H);
+      for(var i = 0; i < gray.length; i++) gray[i] = (d[i*4] + d[i*4+1] + d[i*4+2]) / 3;
+      if(prev){
+        for(var p = 0; p < gray.length; p++){
+          if(Math.abs(gray[p] - prev[p]) > 28){ sum += (p % W) - (W - 1) / 2; cnt++; }
+        }
+      }
+      prev = gray;
+      t++;
+      say('Berdiri di tengah, lambaikan TANGAN KIRI Anda tinggi-tinggi... ' + Math.ceil((TOTAL - t) / 10) + ' dtk');
+      if(t < TOTAL) return;
+
+      clearInterval(iv); calibrating = false;
+      if(cnt < 40){ say('Gerakan tidak terdeteksi. Coba lagi dengan lambaian lebih besar.', 3500); return; }
+      var avg = sum / cnt;                                  // >0: gerakan di sisi kanan frame mentah
+      if(Math.abs(avg) < 1.5){ say('Hasil kurang jelas. Berdiri di tengah dan lambaikan tangan lebih ke samping.', 4000); return; }
+      // Kamera normal (belum dimirror): tangan kiri tampak di KANAN frame mentah -> mirror asli sudah benar
+      var needMirror = avg > 0;
+      setSaved(needMirror ? 'flip' : 'normal');
+      apply(needMirror);
+      say(needMirror ? 'Kamera normal: tampilan sudah benar.' : 'Kamera sudah terbalik dari perangkat: mirror dibatalkan.', 3500);
+    }, 100);
+  });
+
+  ['loadedmetadata', 'playing', 'camchange'].forEach(function(ev){ video.addEventListener(ev, refresh); });
+  refresh();
+})();
+</script>
 </body>
 </html>
